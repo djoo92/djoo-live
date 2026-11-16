@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دجّو لايف | Djoo Live</title>
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0a0e1a;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .bg-glow {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 120%, rgba(0,200,83,.15), transparent 60%),
+                radial-gradient(ellipse at 50% -20%, rgba(30,80,200,.12), transparent 55%);
+  }
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; z-index: 10;
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+  .logo span { color: #00c853; }
+  .live-badge {
+    background: #e53935; color: #fff; font-size: 12px; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; display: none;
+    animation: pulse 1.5s infinite;
+  }
+  .live-badge.on { display: inline-block; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .stage {
+    width: 100%; max-width: 1100px; padding: 70px 16px 30px;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .video-wrap {
+    position: relative; width: 100%; aspect-ratio: 16/9;
+    background: #000; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
+  }
+  video { width: 100%; height: 100%; object-fit: contain; background:#000; }
+  .offline {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    background: linear-gradient(135deg,#0d1226,#111a33);
+  }
+  .offline .ball { font-size: 64px; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+  .offline h2 { font-size: 20px; color: #9fb2d8; }
+  .offline p { font-size: 14px; color: #5a6b96; }
+  .follow-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 26px; border-radius: 12px; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    text-decoration: none; transition: transform .15s, box-shadow .15s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-fb { background: #1877f2; color: #fff; box-shadow: 0 8px 24px rgba(24,119,242,.4); }
+  .btn-go { background: #00c853; color: #04120a; box-shadow: 0 8px 24px rgba(0,200,83,.35); }
+  .btn-ghost { background: rgba(255,255,255,.07); color: #cfd8ef; border: 1px solid rgba(255,255,255,.12); }
+  /* gate overlay */
+  .gate {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(5,8,18,.92); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .gate.hidden { display: none; }
+  .gate-card {
+    background: #121a30; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 36px 30px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.7);
+  }
+  .gate-card h1 { font-size: 24px; margin-bottom: 8px; }
+  .gate-card h1 span { color: #00c853; }
+  .gate-card p { color: #9fb2d8; font-size: 14px; line-height: 1.7; margin-bottom: 22px; }
+  .gate-card .steps { text-align: right; color: #cfd8ef; font-size: 14px; margin-bottom: 24px; line-height: 2; }
+  .gate-card .steps b { color: #00c853; }
+  footer { padding: 16px; color: #43538a; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<header>
+  <div class="logo">دجّو <span>لايف</span></div>
+  <div class="live-badge" id="liveBadge">● LIVE</div>
+</header>
+
+<div class="stage">
+  <div class="video-wrap">
+    <video id="player" controls playsinline></video>
+    <div class="offline" id="offline">
+      <div class="ball">⚽</div>
+      <h2>البث غير متاح حاليًا</h2>
+      <p>تابعونا على فيسبوك ليصلك إشعار بدء البث</p>
+    </div>
+  </div>
+
+  <div class="follow-bar">
+    <a class="btn btn-fb" id="fbLink" href="#" target="_blank" rel="noopener">f متابعة على فيسبوك</a>
+    <a class="btn btn-ghost" href="https://kick.com" target="_blank" rel="noopener">Kick</a>
+    <a class="btn btn-ghost" href="https://tiktok.com" target="_blank" rel="noopener">TikTok</a>
+    <a class="btn btn-ghost" href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+  </div>
+</div>
+
+<footer>Djoo Live — جميع الحقوق محفوظة © 2025</footer>
+
+<!-- بوابة الاشتراك -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>دجّو <span>لايف</span></h1>
+    <p>لمشاهدة البث المباشر يجب الاشتراك في صفحة فيسبوك أولاً — حتى يصلك كل جديد</p>
+    <div class="steps">
+      <b>١.</b> اضغط "متابعة على فيسبوك" بالأسفل<br>
+      <b>٢.</b> اضغط زر المتابعة صفحة فيسبوك<br>
+      <b>٣.</b> ارجع واضغط "أنا مشترك — دخول"
+    </div>
+    <a class="btn btn-fb" id="gateFb" href="#" target="_blank" rel="noopener">f متابعة على فيسبوك</a>
+    <br><br>
+    <button class="btn btn-go" id="enterBtn">أنا مشترك — دخول</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var FB_PAGE = (window.DJOO_CONFIG && window.DJOO_CONFIG.facebook) || '#';
+  document.getElementById('fbLink').href = FB_PAGE;
+  document.getElementById('gateFb').href = FB_PAGE;
+
+  var entered = false;
+  try { entered = localStorage.getItem('djoo_subscribed') === '1'; } catch(e){}
+  if (entered) document.getElementById('gate').classList.add('hidden');
+
+  document.getElementById('enterBtn').addEventListener('click', function(){
+    try { localStorage.setItem('djoo_subscribed','1'); } catch(e){}
+    document.getElementById('gate').classList.add('hidden');
+    startPlayer();
+  });
+
+  // مشغل HLS
+  var video = document.getElementById('player');
+  var offline = document.getElementById('offline');
+  var badge = document.getElementById('liveBadge');
+  var hls = null;
+
+  function startPlayer(){
+    var streamUrl = (window.DJOO_CONFIG && window.DJOO_CONFIG.streamUrl) || '';
+    if (!streamUrl) return;
+
+    if (Hls.isSupported()) {
+      hls = new Hls({ liveSyncDurationCount: 3, maxBufferLength: 30 });
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ video.play().catch(function(){}); });
+      hls.on(Hls.Events.ERROR, function(e, data){
+        if (data.fatal) {
+          switch(data.type){
+            case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
+            case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
+            default: hls.destroy(); showOffline(); break;
+          }
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.play().catch(function(){});
+    }
+  }
+
+  function showOffline(){
+    offline.style.display = 'flex';
+    badge.classList.remove('on');
+  }
+  function showLive(){
+    offline.style.display = 'none';
+    badge.classList.add('on');
+  }
+
+  // فحص حالة البث كل 10 ثوانٍ
+  setInterval(function(){
+    var streamUrl = (window.DJOO_CONFIG && window.DJOO_CONFIG.streamUrl) || '';
+    if (!streamUrl) return;
+    fetch(streamUrl.replace('index.m3u8',''), {method:'HEAD', mode:'no-cors'}).catch(function(){});
+    fetch(streamUrl, {cache:'no-store'})
+      .then(function(r){ if(r.ok) showLive(); else showOffline(); })
+      .catch(function(){ showOffline(); });
+  }, 10000);
+
+  if (entered) startPlayer();
+})();
+</script>
+</body>
+</html>
