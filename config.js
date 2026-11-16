@@ -4,7 +4,7 @@ window.DJOO_CONFIG = {
   streamUrl: 'https://proteins-expired-achieved-designation.trycloudflare.com/live/djoo/index.m3u8',
 
   // رابط صفحة فيسبوك
-  facebook: 'https://www.facebook.com/YOUR_PAGE_NAME',
+  facebook: 'https://www.facebook.com/DjooDz92',
 
   // روابط المنصات الأخرى
   kick: 'https://kick.com/YOUR_CHANNEL',

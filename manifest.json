@@ -1,6 +1,6 @@
 {
-  "name": "دجّو لايف | Djoo Live",
-  "short_name": "دجّو لايف",
+  "name": "Djoo TV",
+  "short_name": "Djoo TV",
   "description": "البث المباشر لقناة دجّو",
   "start_url": "./index.html",
   "display": "standalone",

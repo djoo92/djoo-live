@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>دجّو لايف | Djoo Live</title>
+<title>Djoo TV</title>
 <meta name="theme-color" content="#0a0e1a">
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
@@ -30,8 +30,23 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px; z-index: 10;
   }
-  .logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
-  .logo span { color: #00c853; }
+  .logo {
+    font-size: 26px; font-weight: 900; letter-spacing: 2px;
+    background: linear-gradient(90deg, #00c853, #4dd0ff, #ffd54f, #00c853);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite, float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(0,200,83,.45));
+  }
+  @keyframes shine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.03); }
+  }
   .live-badge {
     background: #e53935; color: #fff; font-size: 12px; font-weight: 700;
     padding: 4px 12px; border-radius: 20px; display: none;
@@ -95,7 +110,7 @@
 <div class="bg-glow"></div>
 
 <header>
-  <div class="logo">دجّو <span>لايف</span></div>
+  <div class="logo">Djoo TV</div>
   <div class="live-badge" id="liveBadge">● LIVE</div>
 </header>
 
@@ -122,7 +137,7 @@
 <!-- بوابة الاشتراك -->
 <div class="gate" id="gate">
   <div class="gate-card">
-    <h1>دجّو <span>لايف</span></h1>
+    <h1>Djoo <span>TV</span></h1>
     <p>لمشاهدة البث المباشر يجب الاشتراك في صفحة فيسبوك أولاً — حتى يصلك كل جديد</p>
     <div class="steps">
       <b>١.</b> اضغط "متابعة على فيسبوك" بالأسفل<br>
@@ -146,7 +161,23 @@
   try { entered = localStorage.getItem('djoo_subscribed') === '1'; } catch(e){}
   if (entered) document.getElementById('gate').classList.add('hidden');
 
-  document.getElementById('enterBtn').addEventListener('click', function(){
+  var fbOpened = false;
+  ['fbLink','gateFb'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(){ fbOpened = true; });
+  });
+
+  var enterBtn = document.getElementById('enterBtn');
+  enterBtn.addEventListener('click', function(){
+    if (!fbOpened) {
+      enterBtn.textContent = 'اضغط "متابعة على فيسبوك" أولاً';
+      enterBtn.style.background = '#e53935';
+      setTimeout(function(){
+        enterBtn.textContent = 'أنا مشترك — دخول';
+        enterBtn.style.background = '';
+      }, 2500);
+      return;
+    }
     try { localStorage.setItem('djoo_subscribed','1'); } catch(e){}
     document.getElementById('gate').classList.add('hidden');
     startPlayer();
