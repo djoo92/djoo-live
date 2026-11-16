@@ -53,6 +53,13 @@
     animation: pulse 1.5s infinite;
   }
   .live-badge.on { display: inline-block; }
+  .viewers-badge {
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+    color: #cfd8ef; font-size: 13px; font-weight: 700;
+    padding: 5px 14px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .viewers-badge.hot { border-color: #00c853; color: #00e676; box-shadow: 0 0 14px rgba(0,200,83,.3); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
   .stage {
     width: 100%; max-width: 1100px; padding: 70px 16px 30px;
@@ -111,7 +118,10 @@
 
 <header>
   <div class="logo">Djoo TV</div>
-  <div class="live-badge" id="liveBadge">● LIVE</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="viewers-badge" id="viewersBadge">👁 <span id="viewersCount">0</span></div>
+    <div class="live-badge" id="liveBadge">● LIVE</div>
+  </div>
 </header>
 
 <div class="stage">
@@ -221,6 +231,23 @@
     offline.style.display = 'none';
     badge.classList.add('on');
   }
+
+  // عداد المشاهدين — API عبر Tunnel
+  var viewersCount = document.getElementById('viewersCount');
+  var viewersBadge = document.getElementById('viewersBadge');
+  function pollViewers(){
+    var api = (window.DJOO_CONFIG && window.DJOO_CONFIG.apiUrl) || '';
+    if (!api) return;
+    fetch(api, {cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        viewersCount.textContent = d.viewers || 0;
+        viewersBadge.classList.toggle('hot', (d.viewers || 0) > 0);
+      })
+      .catch(function(){});
+  }
+  pollViewers();
+  setInterval(pollViewers, 8000);
 
   // فحص حالة البث كل 10 ثوانٍ
   setInterval(function(){
